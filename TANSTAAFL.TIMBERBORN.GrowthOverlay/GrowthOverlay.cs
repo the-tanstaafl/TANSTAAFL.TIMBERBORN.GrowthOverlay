@@ -4,18 +4,22 @@ using System.Text;
 using Timberborn.CameraSystem;
 using Timberborn.Common;
 using Timberborn.CoreUI;
+using Timberborn.SettingsSystem;
 using Timberborn.SingletonSystem;
+using Timberborn.StockpilesUI;
 using Timberborn.TickSystem;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 {
-    internal class GrowthOverlay : ILoadableSingleton, ITickableSingleton
+    internal class GrowthOverlay : ILoadableSingleton, ILateUpdatableSingleton
     {
         private readonly Underlay _underlay;
 
         private readonly CameraComponent _cameraComponent;
+
+        private readonly UISettings _uiSettings;
 
         private readonly Dictionary<VisualElement, Vector3> _items = new Dictionary<VisualElement, Vector3>();
 
@@ -23,18 +27,33 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 
         private bool _enabled;
 
-        public GrowthOverlay(Underlay underlay, CameraComponent cameraComponent)
+        private bool _isDirty;
+
+        public GrowthOverlay(Underlay underlay, CameraComponent cameraComponent, UISettings uiSettings)
         {
             _underlay = underlay;
             _cameraComponent = cameraComponent;
+            _uiSettings = uiSettings;
         }
 
         public void Load()
         {
-            //_cameraComponent.CameraPositionUpdated += delegate
-            //{
-            //    UpdatePosition();
-            //};
+            _cameraComponent.CameraPositionOrRotationChanged += delegate
+            {
+                UpdatePosition();
+            };
+            _uiSettings.UIScaleFactorChanged += delegate
+            {
+                UpdatePosition();
+            };
+        }
+
+        public void LateUpdateSingleton()
+        {
+            if (_isDirty)
+            {
+                UpdatePosition();
+            }
         }
 
         public GrowthOverlayToggle GetGrowthOverlayToggle()
@@ -53,6 +72,7 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
             if (_items.TryAdd(element, anchor) && _enabled)
             {
                 _underlay.Add(element);
+                _isDirty = true;
             }
         }
 
@@ -66,17 +86,17 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 
         private void UpdatePosition()
         {
-            if (!_enabled)
+            if (_enabled)
             {
-                return;
+                foreach (KeyValuePair<VisualElement, Vector3> item2 in _items)
+                {
+                    item2.Deconstruct(out var key, out var value);
+                    VisualElement item = key;
+                    Vector3 anchor = value;
+                    UpdatePosition(item, anchor);
+                }
             }
-            foreach (KeyValuePair<VisualElement, Vector3> item2 in _items)
-            {
-                item2.Deconstruct(out var key, out var value);
-                VisualElement item = key;
-                Vector3 anchor = value;
-                UpdatePosition(item, anchor);
-            }
+            _isDirty = false;
         }
 
         private void UpdateOverlay()
@@ -99,6 +119,7 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
             {
                 _underlay.Add(key);
             }
+            _isDirty = true;
         }
 
         private void Disable()
@@ -115,14 +136,14 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
             VisualElement root = _underlay.Root;
             if (item.panel != null)
             {
-                Vector3 vector = _cameraComponent.WorldSpaceToPanelSpace(root, anchor);
-                item.transform.position = new Vector2(vector.x - root.layout.width / 2f, vector.y - root.layout.height / 2f);
+                bool flag = _cameraComponent.IsInFront(anchor);
+                item.ToggleDisplayStyle(flag);
+                if (flag)
+                {
+                    Vector3 vector = _cameraComponent.WorldSpaceToPanelSpace(root, anchor);
+                    item.transform.position = new Vector2(vector.x - root.layout.width / 2f, vector.y - root.layout.height / 2f);
+                }
             }
-        }
-
-        public void Tick()
-        {
-            UpdatePosition();
         }
 
         internal bool IsEnabled { get { return _enabled; } }

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using Timberborn.CoreUI;
-using Timberborn.GameUI;
 using Timberborn.SingletonSystem;
+using Timberborn.TooltipSystem;
+using Timberborn.UILayoutSystem;
 using UnityEngine.UIElements;
 
 namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
@@ -20,7 +21,7 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 
         private readonly VisualElementLoader _visualElementLoader;
 
-        private readonly GameLayout _gameLayout;
+        private readonly UILayout _uiLayout;
 
         private readonly ITooltipRegistrar _tooltipRegistrar;
 
@@ -42,11 +43,11 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
             }
         }
 
-        public GrowthOverlayTogglePanel(GrowthOverlay growthOverlay, VisualElementLoader visualElementLoader, GameLayout gameLayout, ITooltipRegistrar tooltipRegistrar)
+        public GrowthOverlayTogglePanel(GrowthOverlay growthOverlay, VisualElementLoader visualElementLoader, UILayout uiLayout, ITooltipRegistrar tooltipRegistrar)
         {
             _growthOverlay = growthOverlay;
             _visualElementLoader = visualElementLoader;
-            _gameLayout = gameLayout;
+            _uiLayout = uiLayout;
             _tooltipRegistrar = tooltipRegistrar;
         }
 
@@ -61,7 +62,7 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
                 OnOverlayToggled(changeEvent.newValue);
             });
             UpdateToggle();
-            _gameLayout.AddTopRightButton(visualElement, 3);
+            _uiLayout.AddTopRightButton(visualElement, 3);
             _growthOverlayToggle = _growthOverlay.GetGrowthOverlayToggle();
         }
 
