@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{4A0EF6A7-E937-4BD0-95A7-DAB109078977}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		TANSTAAFL.TIMBERBORN.GrowthOverlay\mod_folder\GrowthOverlay\mod.json = TANSTAAFL.TIMBERBORN.GrowthOverlay\mod_folder\GrowthOverlay\mod.json
 		README.md = README.md
 	EndProjectSection
 EndProject
