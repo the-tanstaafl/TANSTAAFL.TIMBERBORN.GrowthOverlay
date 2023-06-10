@@ -7,6 +7,7 @@ using TimberApi.UiBuilderSystem;
 using Timberborn.BlockSystem;
 using Timberborn.CoreUI;
 using Timberborn.EntitySystem;
+using Timberborn.Gathering;
 using Timberborn.Goods;
 using Timberborn.Growing;
 using Timberborn.NaturalResourcesLifeCycle;
@@ -29,6 +30,7 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
         private BlockObjectCenter _blockObjectCenter;
 
         private Growable _growable;
+        private GatherableYieldGrower _yieldGrower;
 
         private LivingNaturalResource _livingNaturalResource;
 
@@ -49,6 +51,7 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
         {
             _blockObjectCenter = GetComponentFast<BlockObjectCenter>();
             _growable = GetComponentFast<Growable>();
+            _yieldGrower = GetComponentFast<GatherableYieldGrower>();
             _livingNaturalResource = GetComponentFast<LivingNaturalResource>();
 
             _item = _visualElementLoader.LoadVisualElement("Game/StockpileOverlayItem");
@@ -93,7 +96,14 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 
         private void UpdateGrowth()
         {
-            _itemText.text = $"{(float)Math.Floor(_growable.GrowthProgress * 100)}%";
+            if (_growable.IsGrown && _yieldGrower != null)
+            {
+                _itemText.text = $"{(float)Math.Floor(100 + _yieldGrower.GrowthProgress * 100)}%";
+            }
+            else
+            {
+                _itemText.text = $"{(float)Math.Floor(_growable.GrowthProgress * 100)}%";
+            }
             _itemText.ToggleDisplayStyle(visible: true);
         }
 
