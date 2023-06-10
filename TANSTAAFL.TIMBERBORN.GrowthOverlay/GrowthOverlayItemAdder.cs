@@ -1,25 +1,20 @@
 ﻿using Bindito.Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using TimberApi.UiBuilderSystem;
-using Timberborn.BaseComponentSystem;
 using Timberborn.BlockSystem;
-using Timberborn.Buildings;
-using Timberborn.ConstructibleSystem;
 using Timberborn.CoreUI;
 using Timberborn.EntitySystem;
 using Timberborn.Goods;
 using Timberborn.Growing;
-using Timberborn.InventorySystem;
 using Timberborn.NaturalResourcesLifeCycle;
 using Timberborn.PrefabSystem;
 using Timberborn.SelectionSystem;
-using Timberborn.SoilMoistureSystem;
 using Timberborn.TickSystem;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEngine.UIElements.Length.Unit;
 
 namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 {
@@ -37,19 +32,17 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 
         private LivingNaturalResource _livingNaturalResource;
 
-        private Button _item;
-        //private Label _itemText;
-
-        //private VisualElement _fillLevel;
-        private UIBuilder _builder;
+        private VisualElement _item;
+        private Image _itemIcon;
+        private Label _itemText;
+        private VisualElement _fillLevel;
 
         [Inject]
-        public void InjectDependencies(GrowthOverlay growthOverlay, VisualElementLoader visualElementLoader, IGoodService goodService, EntitySelectionService selectionManager, UIBuilder uIBuilder)
+        public void InjectDependencies(GrowthOverlay growthOverlay, VisualElementLoader visualElementLoader, EntitySelectionService selectionManager)
         {
             _growthOverlay = growthOverlay;
             _visualElementLoader = visualElementLoader;
             _selectionManager = selectionManager;
-            _builder = uIBuilder;
         }
 
         public void Awake()
@@ -57,55 +50,36 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
             _blockObjectCenter = GetComponentFast<BlockObjectCenter>();
             _growable = GetComponentFast<Growable>();
             _livingNaturalResource = GetComponentFast<LivingNaturalResource>();
-            var img = new Image();
-            img.sprite = _growable.GetComponentFast<LabeledPrefab>().Image;
 
-            var component = _builder.CreateComponentBuilder()
-                .CreateButton()
-                .SetName("GrowthOverlayButton")
-                .SetHeight(new Length(20, Pixel))
-                .SetWidth(new Length(20, Pixel))
-                .SetBackgroundColor(new StyleColor(new Color(0.0f, 0.6f, 0.0f, 0.8f)))
-                .SetPadding(new Padding(1, 1, 1, 1))
-                .AddComponent(_builder.CreateComponentBuilder()
-                    .CreateVisualElement()
-                    .SetHeight(new Length(18, Pixel))
-                    .SetWidth(new Length(18, Pixel))
-                    .AddComponent(img)
-                    .Build()
-                )
-                //.AddComponent(_builder.CreateComponentBuilder()
-                //    .CreateLabel()
-                //    .SetName("GrowthOverlayLabel")
-                //    .SetHeight(new Length(18, Pixel))
-                //    .SetWidth(new Length(20, Pixel))
-                //    .Build()
-                //)
-                .BuildAndInitialize();
+            _item = _visualElementLoader.LoadVisualElement("Game/StockpileOverlayItem");
 
-            _item = component.Q<Button>("GrowthOverlayButton");
-            _item.clicked += delegate
+            var btn = _item.Q<Button>("EntityButton");
+
+            var selectionButton = _item.Q<NineSliceButton>("SelectionButton");
+
+            selectionButton.clicked += delegate
             {
-                _selectionManager.Select(_growable.GameObjectFast.GetComponent<BaseComponent>());
+                _selectionManager.Select(_growable);
             };
-            //_itemText = _item.Q<Label>("GrowthOverlayLabel");
 
-            // Update 3 code
-            //VisualElement e = _visualElementLoader.LoadVisualElement("Master/StockpileOverlayItem");
-            //_item = e.Q<Button>("StockpileOverlayItem");
-            //_item.clicked += delegate
-            //{
-            //    _selectionManager.Select(_growable.GameObjectFast.GetComponent<BaseComponent>());
-            //};
-            //_itemIcon = _item.Q<Image>("Icon");
-            //_itemText = _item.Q<Label>("Stock");
-            //_fillLevel = _item.Q<VisualElement>("Progress");
-            //_fillLevel.parent.parent.Remove(_fillLevel.parent);
+            btn.clicked += delegate
+            {
+                _selectionManager.Select(_growable);
+            };
+
+            _itemIcon = _item.Q<Image>("Icon");
+            _itemIcon.sprite = _growable.GetComponentFast<LabeledPrefab>().Image;
+            _itemIcon.AddToClassList("icon--hidden");
+
+            _itemText = _item.Q<Label>("Stock");
+
+            _fillLevel = _item.Q<VisualElement>("Progress");
+            _fillLevel.parent.parent.Remove(_fillLevel.parent);
         }
 
         public void InitializeEntity()
         {
-            if (!_livingNaturalResource.IsDead)
+            if (!_livingNaturalResource.IsDead && _livingNaturalResource.isActiveAndEnabled)
             {
                 Add();
                 UpdateGrowth();
@@ -119,8 +93,8 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 
         private void UpdateGrowth()
         {
-            //_itemText.text = $"{(float)Math.Floor(_growable.GrowthProgress * 100)}%";
-            //_itemText.ToggleDisplayStyle(visible: true);
+            _itemText.text = $"{(float)Math.Floor(_growable.GrowthProgress * 100)}%";
+            _itemText.ToggleDisplayStyle(visible: true);
         }
 
         private void Add()

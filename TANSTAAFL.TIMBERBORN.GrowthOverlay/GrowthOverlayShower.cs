@@ -30,17 +30,18 @@ namespace TANSTAAFL.TIMBERBORN.GrowthOverlay
 
         public bool ProcessInput()
         {
-            //if (_inputService.ShowGrowthOverlay)
-            //{
-            //    if (!_isShown)
-            //    {
-            //        Enable();
-            //    }
-            //}
-            //else if (_isShown)
-            //{
-            //    Disable();
-            //}
+            if (_inputService.ShowStockpileOverlay)
+            {
+                if (!_isShown)
+                {
+                    Enable();
+                }
+            }
+            else if (_isShown)
+            {
+                Disable();
+            }
+
             return false;
         }
 
